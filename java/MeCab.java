@@ -16,27 +16,42 @@ public class MeCab implements MeCabConstants {
         System.out.println("Loading MeCab library...");
 
         String nativeLibPath = "/org/chasen/mecab/native";
-        if (System.getProperty("os.name").indexOf("Mac") <= 0) {
+        if (System.getProperty("os.name").indexOf("Mac") >= 0) {
             nativeLibPath = nativeLibPath + "/macos";
         } else {
             nativeLibPath = nativeLibPath + "/linux";
         }
 
-        String nativeLibName = System.mapLibraryName("MeCab");
+        String nativeLibName = System.mapLibraryName("MeCabWrapper");
         String nativeLibFilePath = nativeLibPath + "/" + nativeLibName;
         if (MeCab.class.getResource(nativeLibFilePath) == null) {
             System.out.println("Error loading native library: " + nativeLibPath + "/" + nativeLibName);
+            System.exit(1); // TODO: Exception
+        }
+
+        String originalLibName = System.mapLibraryName("mecab");
+        String originalLibFilePath = nativeLibPath + "/" + originalLibName;
+        if (MeCab.class.getResource(originalLibFilePath) == null) {
+            System.out.println("Error loading original library: " + nativeLibPath + "/" + nativeLibName);
             System.exit(1);
         }
 
         // Temporary library folder
-        String tempFolder = new File(System.getProperty("java.io.tmpdir")).getAbsolutePath();
+        String tempFolder = "/tmp";
         File extractedLibFile = new File(tempFolder, nativeLibName);
+        File extractedOriginalLibFile = new File(tempFolder, originalLibName);
 
+        extractLibrary(nativeLibFilePath, extractedLibFile);
+        extractLibrary(originalLibFilePath, extractedOriginalLibFile);
+
+        System.load(extractedLibFile.getAbsolutePath());
+    }
+
+    private static void extractLibrary(String resourcePath, File destination) {
         try {
             // Extract resource files
-            InputStream reader = MeCab.class.getResourceAsStream(nativeLibFilePath);
-            FileOutputStream writer = new FileOutputStream(extractedLibFile);
+            InputStream reader = MeCab.class.getResourceAsStream(resourcePath);
+            FileOutputStream writer = new FileOutputStream(destination);
             byte[] buffer = new byte[1024];
             int bytesRead = 0;
             while ((bytesRead = reader.read(buffer)) != -1) {
@@ -45,8 +60,6 @@ public class MeCab implements MeCabConstants {
 
             writer.close();
             reader.close();
-
-            System.load(extractedLibFile.getAbsolutePath());
         } catch (Exception e) {
             System.err.println(e);
             System.exit(1);

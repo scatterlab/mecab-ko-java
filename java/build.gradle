@@ -7,7 +7,7 @@ publishing {
     maven(MavenPublication) {
       groupId = 'com.scatterlab.mecab-ko-java'
       artifactId = 'mecab-ko-java'
-      version = '1.0.0'
+      version = '1.0.2'
 
       artifact 'MeCab.jar'
     }

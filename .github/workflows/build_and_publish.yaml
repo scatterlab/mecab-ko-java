@@ -43,11 +43,16 @@ jobs:
         run: |
           chmod 755 run-linux.sh
           ./run-linux.sh
-      - name: Store library as artifact
+      - name: Store platform library as artifact
         uses: actions/upload-artifact@v1
         with:
           name: mecab-library-linux
-          path: java/org/chasen/mecab/native/linux/libMeCab.so
+          path: java/org/chasen/mecab/native/linux/libMeCabWrapper.so
+      - name: Store MeCab library as artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: mecab-library-linux-origin
+          path: /usr/local/lib/libmecab.so
 
   build-library-macos:
     name: MeCab library build - macOS
@@ -73,7 +78,12 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: mecab-library-macos
-          path: java/org/chasen/mecab/native/macos/libMeCab.dylib
+          path: java/org/chasen/mecab/native/macos/libMeCabWrapper.dylib
+      - name: Store MeCab library as artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: mecab-library-macos-origin
+          path: /usr/local/lib/libmecab.dylib
   
   build-and-publish:
     name: Build and Publish
@@ -97,6 +107,16 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: mecab-library-macos
+          path: java/org/chasen/mecab/native/macos/
+      - name: Download original library - Linux
+        uses: actions/download-artifact@v1
+        with:
+          name: mecab-library-linux-origin
+          path: java/org/chasen/mecab/native/linux/
+      - name: Download original library - macOS
+        uses: actions/download-artifact@v1
+        with:
+          name: mecab-library-macos-origin
           path: java/org/chasen/mecab/native/macos/
       - name: Build JAR
         working-directory: java
