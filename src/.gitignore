@@ -1,0 +1,11 @@
+.libs
+*.lo
+*.o
+*.la
+*.msvc
+mecab
+mecab-cost-train
+mecab-dict-gen
+mecab-dict-index
+mecab-system-eval
+mecab-test-gen

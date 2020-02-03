@@ -1,0 +1,113 @@
+name: Build and Publish
+on: [push]
+jobs:
+  build-jni:
+    name: Build JNI interface with SWIG
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@master
+      - name: Setup OpenJDK 13
+        uses: actions/setup-java@v1
+        with:
+          java-version: 13-ea
+      - name: Preparation for build
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y swig
+      - name: Build interface with SWIG
+        working-directory: swig
+        run: make java
+      - name: Store JNI interface as artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: java
+          path: java
+  
+  build-library-linux:
+    name: MeCab library build - Linux
+    needs: build-jni
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@master
+      - name: Install MeCab
+        run: |
+          ./configure
+          sudo make
+          sudo make install
+      - name: Download artifact from previous job
+        uses: actions/download-artifact@v1
+        with:
+          name: java
+      - name: Build library
+        working-directory: java
+        run: |
+          chmod 755 run-linux.sh
+          ./run-linux.sh
+      - name: Store library as artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: mecab-library-linux
+          path: java/org/chasen/mecab/native/linux/libMeCab.so
+
+  build-library-macos:
+    name: MeCab library build - macOS
+    needs: build-jni
+    runs-on: macOS-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Install MeCab
+        run: |
+          ./configure
+          sudo make
+          sudo make install
+      - name: Download artifact from previous job
+        uses: actions/download-artifact@v1
+        with:
+          name: java
+      - name: Build library
+        working-directory: java
+        run: |
+          chmod 755 run-macos.sh
+          ./run-macos.sh
+      - name: Store library as artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: mecab-library-macos
+          path: java/org/chasen/mecab/native/macos/libMeCab.dylib
+  
+  build-and-publish:
+    name: Build and Publish
+    needs: [build-library-linux, build-library-macos]
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Setup OpenJDK 13
+        uses: actions/setup-java@v1
+        with:
+          java-version: 13-ea
+      - name: Download JNI interface
+        uses: actions/download-artifact@v1
+        with:
+          name: java
+      - name: Download prebuilt library - Linux
+        uses: actions/download-artifact@v1
+        with:
+          name: mecab-library-linux
+          path: java/org/chasen/mecab/native/linux/
+      - name: Download prebuilt library - macOS
+        uses: actions/download-artifact@v1
+        with:
+          name: mecab-library-macos
+          path: java/org/chasen/mecab/native/macos/
+      - name: Build JAR
+        working-directory: java
+        env:
+          PACKAGE: org/chasen/mecab
+        run: |
+          cp -f MeCab.java $PACKAGE/MeCab.java
+          javac $PACKAGE/*.java
+          jar cfv MeCab.jar $PACKAGE/*.class $PACKAGE/native/**/*
+      - name: Publish to Github Packages
+        working-directory: java
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gradle publish

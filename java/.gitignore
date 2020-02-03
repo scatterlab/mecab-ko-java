@@ -1,0 +1,8 @@
+*.dylib
+*.so
+MeCab_wrap.*
+MeCab.jar
+org/
+.gradle/
+.settings/
+.project

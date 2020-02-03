@@ -1,0 +1,25 @@
+plugins {
+  id 'maven-publish'
+}
+
+publishing {
+  publications {
+    maven(MavenPublication) {
+      groupId = 'com.scatterlab.mecab-ko-java'
+      artifactId = 'mecab-ko-java'
+      version = '1.0.0'
+
+      artifact 'MeCab.jar'
+    }
+  }
+  repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/scatterlab/mecab-ko-java")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}
