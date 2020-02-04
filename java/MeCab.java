@@ -10,9 +10,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.lang.UnsatisfiedLinkError;
 
 public class MeCab implements MeCabConstants {
-    public static synchronized void initialize() {
+    public static synchronized void initialize() throws UnsatisfiedLinkError {
         System.out.println("Loading MeCab library...");
 
         String nativeLibPath = "/org/chasen/mecab/native";
@@ -25,25 +26,13 @@ public class MeCab implements MeCabConstants {
         String nativeLibName = System.mapLibraryName("MeCabWrapper");
         String nativeLibFilePath = nativeLibPath + "/" + nativeLibName;
         if (MeCab.class.getResource(nativeLibFilePath) == null) {
-            System.out.println("Error loading native library: " + nativeLibPath + "/" + nativeLibName);
-            System.exit(1); // TODO: Exception
-        }
-
-        String originalLibName = System.mapLibraryName("mecab");
-        String originalLibFilePath = nativeLibPath + "/" + originalLibName;
-        if (MeCab.class.getResource(originalLibFilePath) == null) {
-            System.out.println("Error loading original library: " + nativeLibPath + "/" + nativeLibName);
-            System.exit(1);
+            throw new UnsatisfiedLinkError("Error finding native library: " + nativeLibFilePath);
         }
 
         // Temporary library folder
         String tempFolder = "/tmp";
         File extractedLibFile = new File(tempFolder, nativeLibName);
-        File extractedOriginalLibFile = new File(tempFolder, originalLibName);
-
         extractLibrary(nativeLibFilePath, extractedLibFile);
-        extractLibrary(originalLibFilePath, extractedOriginalLibFile);
-
         System.load(extractedLibFile.getAbsolutePath());
     }
 
@@ -61,8 +50,7 @@ public class MeCab implements MeCabConstants {
             writer.close();
             reader.close();
         } catch (Exception e) {
-            System.err.println(e);
-            System.exit(1);
+            throw new UnsatisfiedLinkError("Error loading native library: " + resourcePath);
         }
     }
 }

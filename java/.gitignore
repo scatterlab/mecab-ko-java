@@ -1,5 +1,6 @@
 *.dylib
 *.so
+*.a
 MeCab_wrap.*
 MeCab.jar
 org/

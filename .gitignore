@@ -1,1 +1,12 @@
+config.h
+config.log
+config.status
+libtool
+Makefile
+mecab-config
+mecab.iss
+mecabrc
+perl
+stamp-h1
 .DS_Store
+.vscode/
